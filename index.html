@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEMF Therapy Knowledge Quiz</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>PEMF Therapy Knowledge Quiz</h1>
+    
+    <div id="quizForm">
+        <div class="question">
+            <p>1. What does PEMF stand for?</p>
+            <input type="radio" name="q1" value="a"> a) Powerful Electromagnetic Field Therapy<br>
+            <input type="radio" name="q1" value="b"> b) Pulsed Electromagnetic Field Therapy<br>
+            <input type="radio" name="q1" value="c"> c) Programmed Electromagnetic Frequency Treatment<br>
+        </div>
+
+        <div class="question">
+            <p>2. Which of the following is NOT a benefit of PEMF therapy?</p>
+            <input type="radio" name="q2" value="a"> a) Chronic pain relief<br>
+            <input type="radio" name="q2" value="b"> b) Improved bone healing<br>
+            <input type="radio" name="q2" value="c"> c) Guaranteed cure for all diseases<br>
+        </div>
+
+        <div class="question">
+            <p>3. How long does a typical PEMF therapy session last?</p>
+            <input type="radio" name="q3" value="a"> a) 5-10 minutes<br>
+            <input type="radio" name="q3" value="b"> b) 15-30 minutes<br>
+            <input type="radio" name="q3" value="c"> c) 1-2 hours<br>
+        </div>
+
+        <div class="question">
+            <p>4. Is PEMF therapy FDA approved?</p>
+            <input type="radio" name="q4" value="a"> a) Yes, for all medical conditions<br>
+            <input type="radio" name="q4" value="b"> b) No, it's not approved at all<br>
+            <input type="radio" name="q4" value="c"> c) Yes, for certain applications like bone healing and depression treatment<br>
+        </div>
+
+        <div class="question">
+            <p>5. What's a key advantage of PEMF therapy in terms of cost?</p>
+            <input type="radio" name="q5" value="a"> a) It's always the cheapest option<br>
+            <input type="radio" name="q5" value="b"> b) It's a one-time investment that can treat multiple conditions<br>
+            <input type="radio" name="q5" value="c"> c) Insurance always covers it fully<br>
+        </div>
+
+        <button onclick="submitQuiz()">Submit Quiz</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        // Initialize Firebase (replace with your own config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            // ... other config properties
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.firestore();
+
+        function submitQuiz() {
+            const answers = ['b', 'c', 'b', 'c', 'b'];
+            let score = 0;
+            let wrongAnswers = [];
+
+            for (let i = 1; i <= 5; i++) {
+                const question = document.querySelector(`input[name="q${i}"]:checked`);
+                if (question) {
+                    if (question.value === answers[i-1]) {
+                        score++;
+                    } else {
+                        wrongAnswers.push(i);
+                    }
+                } else {
+                    wrongAnswers.push(i);
+                }
+            }
+
+            const percentage = (score / 5) * 100;
+            let resultMessage = `You scored ${score} out of 5 (${percentage}%).\n\n`;
+
+            if (score < 5) {
+                resultMessage += "You haven't answered all questions correctly. Please review the incorrect answers and try again.\n\n";
+                resultMessage += "Incorrect questions: " + wrongAnswers.join(", ") + "\n";
+            } else {
+                resultMessage += "Congratulations! You've answered all questions correctly!\n\n";
+            }
+
+            document.getElementById('result').innerText = resultMessage;
+
+            // Save result to Firestore
+            db.collection("quizResults").add({
+                score: score,
+                wrongAnswers: wrongAnswers,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch((error) => {
+                console.error("Error saving quiz result:", error);
+            });
+
+            if (score < 5) {
+                // Clear selected answers for incorrect questions
+                wrongAnswers.forEach(questionNumber => {
+                    const radios = document.getElementsByName(`q${questionNumber}`);
+                    radios.forEach(radio => radio.checked = false);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
